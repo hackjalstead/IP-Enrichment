@@ -1,0 +1,27 @@
+
+import geoip2.database
+import pandas as pd
+
+df = pd.read_csv('ips.csv') # Put IP list in same dir u run the script from (it assumes single-column CSV with IPs, no headers)
+df.columns = ['IP']
+
+reader = geoip2.database.Reader('GeoLite2-Country.mmdb')
+
+def geolocate_country(ip):
+    try:
+        response = reader.country(ip)
+        return {
+            'IP': ip,
+            'Country': response.country.name
+        }
+    except:
+        return {
+            'IP': ip,
+            'Country': 'Error'
+        }
+
+results = [geolocate_country(ip) for ip in df['IP'].dropna().unique()]
+geo_df = pd.DataFrame(results)
+
+geo_df.to_csv('geolocated_ips_country.csv', index=False)
+print("Country-level geolocation complete. Output saved to 'geolocated_ips_country.csv'.")
